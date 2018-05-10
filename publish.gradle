@@ -1,0 +1,63 @@
+apply plugin: 'maven'
+
+// custom tasks for creating source/ javadoc jars
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+javadoc {
+    options {
+        encoding 'utf-8'
+    }
+}
+
+// add javadoc/source jar tasks as artifacts
+artifacts {
+    archives sourcesJar, javadocJar
+}
+
+ext {
+    PLUGIN_GROUP_ID = 'com.baidu.gradle-plugin'
+    PLUGIN_ARTIFACTID = 'fat-aar'
+    PLUGIN_VERSION = '1.0.1-SNAPSHOT'
+    POM_DESCRIPTION = 'fat aar'
+
+    mavenUserName = hasProperty('MAVEN_USERNAME') ? MAVEN_USERNAME : "admin"
+    mavenPassword = hasProperty('MAVEN_PASSWORD') ? MAVEN_PASSWORD : "admin123"
+
+    RELEASE_REPOSITORY_URL = "http://cq01-android-compile.cq01:8081/repository/maven-releases/"
+    SNAPSHOT_REPOSITORY_URL= "http://cq01-android-compile.cq01:8081/repository/maven-snapshots/"
+
+}
+uploadArchives {
+    repositories.mavenDeployer {
+
+        repository(url: RELEASE_REPOSITORY_URL) {
+            authentication(userName: mavenUserName, password: mavenPassword)
+        }
+        snapshotRepository(url: SNAPSHOT_REPOSITORY_URL) {
+            authentication(userName: mavenUserName, password: mavenPassword)
+        }
+        configurePOM(pom)
+    }
+    //本地调试时打开
+//    repositories.mavenDeployer {
+//        configurePOM(pom)
+//        repository(url: uri('/Users/hanle/repos'))
+//    }
+}
+
+private configurePOM(def pom) {
+    pom.project {
+        groupId PLUGIN_GROUP_ID
+        artifactId PLUGIN_ARTIFACTID
+        version PLUGIN_VERSION
+        description POM_DESCRIPTION
+    }
+}
